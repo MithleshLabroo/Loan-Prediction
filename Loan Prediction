@@ -1,0 +1,219 @@
+library(dplyr)
+library(ggplot2)
+train<-read.csv("F:/Hackathons/Loan Prediction/train.csv", stringsAsFactors = FALSE)
+str(train)
+test<-read.csv("F:/Hackathons/Loan Prediction/test.csv", stringsAsFactors = FALSE)
+str(test$first_payment_date)
+submission<-read.csv("F:/Hackathons/Loan Prediction/sample_submission.csv")
+
+###Categorical###
+ggplot(train, aes(source, m13)) + geom_bar(stat = "identity", color = "purple") +
+  ggtitle("source vs m13") 
+###X has highest impact on m13 followed by Y and Z#####
+
+ggplot(train, aes(financial_institution, m13)) + geom_bar(stat = "identity", color = "purple") +
+  theme(axis.text.x = element_text(angle = 70, vjust = 0.5, color = "navy")) + xlab("financial_institution") + ylab("m13")+
+  ggtitle("financial_institution vs m13") 
+###Other followed by Browning hat has highest impact on m13#####
+
+ggplot(train, aes(origination_date, m13)) + geom_bar(stat = "identity", color = "purple") +
+  ggtitle("origination_date vs m13") 
+###2012-01-01 has highest impact on m13 followed by 2012-02-01 and then 2012-03-01 #####
+
+ggplot(train, aes(first_payment_date, m13)) + geom_bar(stat = "identity", color = "purple") +
+  ggtitle("first_payment_date vs m13") 
+###03/2012 has highest impact on m13 followed by 04/2012 and then 05/2012 #####
+
+ggplot(train, aes(loan_purpose, m13)) + geom_bar(stat = "identity", color = "purple") +
+  xlab("loan_purpose") + ylab("m13") + ggtitle("loan_purpose vs m13") 
+####B12, followed by A23 and C86######
+
+ggplot(train, aes(insurance_percent, m13)) + geom_bar(stat = "identity", color = "purple") +
+  xlab("insurance_percent") + ylab("m13") + ggtitle("insurance_percent vs m13")
+####0 followed by 30 and then 25######
+
+ggplot(train, aes(insurance_type, m13)) + geom_bar(stat = "identity", color = "purple") +
+  xlab("insurance_type") + ylab("m13") + ggtitle("insurance_type vs m13")
+####-0.5 to 0.5 has max impact on m13 and cover more than 95%######
+
+###Continuous###
+ggplot(train, aes(x= m13, y = interest_rate)) + geom_point(size = 2.5, color="navy") + 
+  xlab("interest_rate") + ylab("m13") + ggtitle("interest_rate vs m13")
+####-0.5 to 0.5 has max impact on m13 and cover more than 95%######
+
+ggplot(train, aes(x= interest_rate, y = m13)) + geom_point(size = 2.5, color="navy") + 
+  xlab("interest_rate") + ylab("m13") + ggtitle("interest_rate vs m13")
+
+ggplot(train, aes(x= unpaid_principal_bal, y = m13)) + geom_point(size = 2.5, color="navy") + 
+  xlab("unpaid_principal_bal") + ylab("m13") + ggtitle("unpaid_principal_bal vs m13")
+
+ggplot(train, aes(x= loan_term, y = m13)) + geom_point(size = 2.5, color="navy") + 
+  xlab("loan_term") + ylab("m13") + ggtitle("loan_term  vs m13")
+
+ggplot(train, aes(x= loan_to_value, y = m13)) + geom_point(size = 2.5, color="navy") + 
+  xlab("loan_to_value") + ylab("m13") + ggtitle("loan_to_value  vs m13")
+
+ggplot(train, aes(x= debt_to_income_ratio, y = m13)) + geom_point(size = 2.5, color="navy") + 
+  xlab("debt_to_income_ratio") + ylab("m13") + ggtitle("debt_to_income_ratio  vs m13")
+
+
+ggplot(train, aes(x= borrower_credit_score, y = m13)) + geom_point(size = 2.5, color="navy") + 
+  xlab("borrower_credit_score") + ylab("m13") + ggtitle("borrower_credit_score  vs m13")
+
+ggplot(train, aes(x= co.borrower_credit_score, y = m13)) + geom_point(size = 2.5, color="navy") + 
+  xlab("co.borrower_credit_score") + ylab("m13") + ggtitle("co.borrower_cre  m,  dit_score  vs m13")
+
+table(train$m13)
+test$m13<-0
+data<-rbind(train,test)
+sum(is.na(data))
+str(data) 
+names(data)
+list<-names(data[,-c(1,2,3,7,8,13)])
+unique(data$m12)
+par(mfrow=c(4,7), mar=c(1,1,1,1))
+for(i in 1:length(list)){
+  boxplot(data[,list[i]], main = list[i])
+}
+#########Outlier Treatment############
+dev.off()
+summary(data$interest_rate)
+x1 <- data$interest_rate
+qnt <- quantile(x1, probs=c(.25, .75), na.rm = T)
+caps <- quantile(x1, probs=c(.05, .95), na.rm = T)
+H <- 1.5 * IQR(x1, na.rm = T)
+x1[x1 < (qnt[1] - H)] <- caps[1]
+x1[x1 > (qnt[2] + H)] <- caps[2]
+boxplot(x1)
+data$interest_rate <- x1 
+summary(data$interest_rate)
+####
+summary(data$unpaid_principal_bal)
+boxplot(data$unpaid_principal_bal)
+x2 <- data$unpaid_principal_bal
+qnt <- quantile(x2, probs=c(.25, .75), na.rm = T)
+caps <- quantile(x2, probs=c(.05, .95), na.rm = T)
+H <- 1.5 * IQR(x2, na.rm = T)
+x2[x2 > (qnt[2] + H)] <- caps[2]
+boxplot(x2)
+data$unpaid_principal_bal <- x2 
+summary(data$unpaid_principal_bal)
+####
+summary(data$loan_to_value)
+boxplot(data$loan_to_value)
+x3 <- data$loan_to_value
+qnt <- quantile(x3, probs=c(.25, .75), na.rm = T)
+caps <- quantile(x3, probs=c(.05, .95), na.rm = T)
+H <- 1.5 * IQR(x3, na.rm = T)
+x3[x3 < (qnt[1] - H)] <- caps[1]
+boxplot(x3)
+data$loan_to_value <- x3 
+summary(data$loan_to_value)
+#####
+summary(data$borrower_credit_score)
+boxplot(data$borrower_credit_score)
+x4 <- data$borrower_credit_score
+qnt <- quantile(x4, probs=c(.25, .75), na.rm = T)
+caps <- quantile(x4, probs=c(.05, .95), na.rm = T)
+H <- 1.5 * IQR(x4, na.rm = T)
+x4[x4 < (qnt[1] - H)] <- caps[1]
+boxplot(x4)
+data$borrower_credit_score <- x4 
+summary(data$borrower_credit_score)
+###############
+summary(data$insurance_percent)
+boxplot(data$insurance_percent)
+x5 <- data$insurance_percent
+qnt <- quantile(x5, probs=c(.25, .75), na.rm = T)
+caps <- quantile(x5, probs=c(.05, .95), na.rm = T)
+H <- 1.5 * IQR(x5, na.rm = T)
+x5[x5 > (qnt[2] + H)] <- caps[2]
+boxplot(x5)
+data$insurance_percent <- x5 
+summary(data$insurance_percent)
+###
+list<-names(data[,-c(1,2,3,7,8,13)])
+for(i in 1:length(list)){
+  boxplot(data[,list[i]], main = list[i])
+}
+list
+######Formatting dates########
+unique(data$origination_date)
+data$origination_date[data$origination_date=="01/01/12"]<-"2012-01-01"
+data$origination_date[data$origination_date=="01/02/12"]<-"2012-02-01"
+data$origination_date[data$origination_date=="01/03/12"]<-"2012-03-01"
+
+unique(data$first_payment_date)
+data$first_payment_date[data$first_payment_date=="Apr-12"]<-"04/2012"
+data$first_payment_date[data$first_payment_date=="Mar-12"]<-"03/2012"
+data$first_payment_date[data$first_payment_date=="May-12"]<-"05/2012"
+data$first_payment_date[data$first_payment_date=="Feb-12"]<-"02/2012"
+
+#######Binning and Creating dummy Variable######
+unique(data$m13)
+unique(data$financial_institution)
+data%>%count(m13,levels=financial_institution)%>%filter(m13==1)->datC1
+datC1$N<-unclass(data%>%filter(financial_institution%in%datC1$levels)%>%count(financial_institution))[[2]]
+datC1$m13Perc<-datC1$n/datC1$N                                                               
+datC1$Var.Name<-rep("financial_institution",nrow(datC1))
+datC1$m13Perc<-sort(datC1$m13Perc, decreasing = FALSE)
+data$financial_institution<-ifelse(data$financial_institution=="Anderson-Taylor"|data$financial_institution=="Chapman-Mcmahon"|data$financial_institution=="Browning-Hart"|data$financial_institution=="Cole, Brooks and Vincent"|
+                                     data$financial_institution=="Edwards-Hoffman",0,ifelse(data$financial_institution=="Martinez, Duffy and Bird"|data$financial_institution=="Miller, Mcclure and Allen"|data$financial_institution=="Nicholson Group"|
+                                                                                              data$financial_institution=="OTHER"|data$financial_institution=="OTHER"|data$financial_institution=="Richards-Walters",1,2))
+unique(data$financial_institution)
+###Train and Test###
+set.seed(200)
+index<-sample(nrow(data), 0.7639215*nrow(data), replace = F)
+train1<-data[index,]
+test1<-data[-index,]
+colnames(data)
+####Model Building####
+mod<-glm(m13~., data = train1[,-1], family = "binomial")
+summary(mod)
+#####
+mod1<-glm(m13~source+interest_rate+unpaid_principal_bal+number_of_borrowers+
+           debt_to_income_ratio+borrower_credit_score+co.borrower_credit_score+
+           m1+m5+m9+m10+m11+m12, data = train1, family = "binomial")
+summary(mod1)
+########
+unique(data$source)
+train1$source_Y<-ifelse(train1$source=="Y", 1,0)
+train1$source_Z<-ifelse(train1$source=="Z", 1,0)
+
+test1$source_Y<-ifelse(test1$source=="Y", 1,0)
+test1$source_Z<-ifelse(test1$source=="Z", 1,0)
+
+#########
+mod3<-glm(m13~source_Y+source_Z+interest_rate+unpaid_principal_bal+number_of_borrowers+
+            debt_to_income_ratio+borrower_credit_score+co.borrower_credit_score+
+            m1+m5+m9+m10+m11+m12, data = train1, family = "binomial")
+summary(mod3)
+
+mod4<-glm(m13~source_Y+source_Z+interest_rate+unpaid_principal_bal+co.borrower_credit_score+
+            debt_to_income_ratio+borrower_credit_score+
+            m1+m5+m9+m10+m12, data = train1, family = "binomial")
+summary(mod4)
+######Performance Metrics######
+vif(mod4)
+
+predicted<-mod4$fitted.values
+head(predicted)
+table(train1$m13)/nrow(train1)
+
+predbkt<-ifelse(predicted>=0.0055,1,0)
+table(predbkt,train1$m13)
+
+library(ROCR)
+pred<-prediction(predicted, train1$m13)
+perf<-performance(pred, "tpr", "fpr")
+plot(perf)
+abline(0,1)
+
+auc<-performance(pred, "auc")
+auc
+
+########Finding prdicted values for target variable###### 
+
+pr<-predict(mod4, test1[,-1], type = "response")
+submission$m13=ifelse(pr>=0.0055,1,0)
+write.csv(submission, "Loan_Prediction_Submit.csv", row.names = F)
